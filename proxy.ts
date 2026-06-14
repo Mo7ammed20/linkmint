@@ -9,7 +9,9 @@ const PUBLIC_PREFIXES = ["/r/", "/api/auth/", "/api/links/resolve/", "/api/track
 function secret(): Uint8Array {
   const raw = process.env.AUTH_SECRET;
   if (!raw && process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET is required");
+    throw new Error(
+      "AUTH_SECRET is required in production. Set it in Vercel env vars or .env (generate with: openssl rand -hex 32).",
+    );
   }
   return new TextEncoder().encode(raw ?? "dev-only-insecure-secret");
 }
@@ -32,9 +34,13 @@ export async function proxy(req: NextRequest) {
     pathname.startsWith("/blog/");
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const decoded = token ? await readRole(token) : null;
-  const isAuthenticated = decoded?.ok === true;
-  const role = decoded && decoded.ok ? decoded.role : null;
+  let isAuthenticated = false;
+  let role: string | null = null;
+  if (token) {
+    const decoded = await readRole(token);
+    isAuthenticated = decoded.ok;
+    role = decoded.ok ? decoded.role : null;
+  }
 
   if (isPublic) {
     return withAuthHeaders(NextResponse.next(), isAuthenticated, role);

@@ -40,6 +40,8 @@ export function handleError(err: unknown): NextResponse {
   const message = err instanceof Error ? err.message : "Internal server error";
   if (process.env.NODE_ENV !== "production") {
     console.error("[api]", err);
+  } else {
+    console.error("[api]", message);
   }
   return fail(500, message);
 }

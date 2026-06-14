@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   images: {
@@ -12,6 +13,9 @@ const nextConfig: NextConfig = {
     "172.16.0.0/12",
     "192.168.0.0/16",
   ],
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
 };
 
 export default nextConfig;

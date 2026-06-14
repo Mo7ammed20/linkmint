@@ -47,8 +47,9 @@ export function LoginForm() {
       toast.success("Welcome back");
       const next = searchParams.get("next") || "/dashboard";
       router.push(next);
-    } catch {
-      toast.error("Something went wrong");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

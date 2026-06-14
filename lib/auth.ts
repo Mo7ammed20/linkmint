@@ -30,9 +30,17 @@ export interface SessionUser {
 function secret(): Uint8Array {
   const raw = process.env.AUTH_SECRET;
   if (!raw && process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET environment variable is required in production");
+    throw new Error(
+      "AUTH_SECRET environment variable is required in production. " +
+        "Set it in Vercel → Project Settings → Environment Variables, " +
+        "or generate one locally with: openssl rand -hex 32",
+    );
   }
   return new TextEncoder().encode(raw ?? "dev-only-insecure-secret");
+}
+
+export function isAuthSecretConfigured(): boolean {
+  return Boolean(process.env.AUTH_SECRET);
 }
 
 export async function hashPassword(plain: string): Promise<string> {

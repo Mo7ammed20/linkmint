@@ -52,8 +52,9 @@ export function RegisterForm() {
       setSuccess(true);
       toast.success("Account created", { description: "Welcome to Linkmint." });
       setTimeout(() => router.push("/dashboard"), 700);
-    } catch {
-      toast.error("Something went wrong");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

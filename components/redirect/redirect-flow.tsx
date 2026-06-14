@@ -23,7 +23,7 @@ import { AuroraBackground } from "@/components/aurora-background";
 import { cn } from "@/lib/utils";
 import { AdBlockerGate } from "@/components/redirect/adblocker-gate";
 import { useAdLoader } from "@/components/redirect/use-ad-loader";
-import { AdZones } from "@/components/redirect/ad-zones";
+import { AdZoneById } from "@/components/redirect/ad-zones";
 
 const STEP_DURATION = 30;
 const TOTAL_STEPS = 3;
@@ -42,6 +42,8 @@ async function postJSON<T>(url: string, body: unknown): Promise<T> {
   }
   return res.json() as Promise<T>;
 }
+
+let currentToken = "";
 
 async function trackAndGo(shortCode: string): Promise<void> {
   try {
@@ -66,8 +68,6 @@ async function trackAndGo(shortCode: string): Promise<void> {
     window.location.href = "/";
   }
 }
-
-let currentToken = "";
 
 function detectDevice(): string {
   const ua = navigator.userAgent;
@@ -244,9 +244,14 @@ export function RedirectFlow({
     }
   }
 
+  const totalRemaining = Math.max(
+    TOTAL_DURATION - (step * STEP_DURATION + (STEP_DURATION - stepRemaining)),
+    0,
+  );
+
   return (
     <AdBlockerGate>
-      <div className="relative min-h-dvh overflow-hidden">
+      <div className="relative min-h-dvh overflow-x-hidden">
         <AuroraBackground className="fixed inset-0 -z-10" intensity="high" />
         <div
           id="ad-detect-bait"
@@ -255,7 +260,7 @@ export function RedirectFlow({
           aria-hidden="true"
         />
         <div className="relative z-10 flex min-h-dvh flex-col">
-          <header className="flex items-center justify-between p-6">
+          <header className="flex items-center justify-between p-4 sm:p-6">
             <Link href="/">
               <Logo />
             </Link>
@@ -265,12 +270,20 @@ export function RedirectFlow({
             </div>
           </header>
 
-          <div className="flex flex-1 items-center justify-center px-4 py-8">
+          <div className="px-4 sm:px-6">
+            <div className="mx-auto max-w-6xl">
+              <div className="mb-4 flex justify-center">
+                <AdZoneById id="zone1" step={step} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-1 items-start justify-center px-4 py-4 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-5xl"
+              className="w-full max-w-6xl"
             >
               <StepHeader
                 steps={STEPS}
@@ -279,16 +292,19 @@ export function RedirectFlow({
                 isFinished={false}
               />
 
-              <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-                <CountdownPanel
-                  stepRemaining={stepRemaining}
-                  totalRemaining={Math.max(TOTAL_DURATION - (step * STEP_DURATION + (STEP_DURATION - stepRemaining)), 0)}
-                  currentStepLabel={STEPS[step].label}
-                  currentStepIndex={step}
-                  isFinished={false}
-                  isLoading={adsLoading}
-                  isReady={adsReady}
-                />
+              <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr_300px]">
+                <div className="space-y-4">
+                  <CountdownPanel
+                    stepRemaining={stepRemaining}
+                    totalRemaining={totalRemaining}
+                    currentStepLabel={STEPS[step].label}
+                    currentStepIndex={step}
+                    isFinished={false}
+                    isLoading={adsLoading}
+                    isReady={adsReady}
+                  />
+                  <AdZoneById id="zone3" step={step} />
+                </div>
 
                 <div className="space-y-4">
                   <StepCopy
@@ -325,21 +341,28 @@ export function RedirectFlow({
                     <p className="text-xs text-destructive">{error}</p>
                   ) : null}
 
+                  <FeaturedSponsor step={step} ads={ADS} />
+
                   <p className="text-[11px] text-muted-foreground">
                     This short wait funds the creators you follow. Thanks for your support.
                   </p>
                 </div>
-              </div>
 
-              <AdZoneStack currentStep={step} ads={ADS} />
-
-              <div className="mt-6">
-                <AdZones step={step} />
+                <div className="space-y-4">
+                  <AdZoneById id="zone2" step={step} />
+                  <AdZoneById id="zone4" step={step} />
+                </div>
               </div>
             </motion.div>
           </div>
 
-          <footer className="flex items-center justify-between p-6 text-[11px] text-muted-foreground">
+          <div className="px-4 pb-2 sm:px-6">
+            <div className="mx-auto flex max-w-6xl justify-center">
+              <AdZoneById id="zone5" step={step} />
+            </div>
+          </div>
+
+          <footer className="flex items-center justify-between p-4 text-[11px] text-muted-foreground sm:p-6">
             <span>Powered by Linkmint</span>
             <Link href="/" className="inline-flex items-center gap-1 hover:text-foreground">
               <Sparkles className="h-3 w-3" />
@@ -364,7 +387,7 @@ function StepHeader({
   isFinished: boolean;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
         {steps.map((s, i) => {
           const done = i < currentStep;
@@ -436,7 +459,7 @@ function CountdownPanel({
   const dashOffset = circumference * (1 - stepRemaining / STEP_DURATION);
 
   return (
-    <div className="glass relative overflow-hidden rounded-3xl p-6">
+    <div className="glass relative overflow-hidden rounded-3xl p-5">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/15 via-transparent to-accent/15" />
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
         <Timer className="h-3.5 w-3.5" />
@@ -444,7 +467,7 @@ function CountdownPanel({
       </div>
       <p className="mt-1 text-sm font-medium">{currentStepLabel}</p>
 
-      <div className="relative mx-auto mt-4 aspect-square w-fit">
+      <div className="relative mx-auto mt-3 aspect-square w-fit">
         <div className="absolute inset-0 -m-6 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-3xl" />
         <div className="relative grid place-items-center">
           <svg
@@ -491,7 +514,7 @@ function CountdownPanel({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[11px]">
+      <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[11px]">
         <div className="rounded-xl border border-border/50 bg-card/40 p-2">
           <p className="text-muted-foreground">This step</p>
           <p className="mt-0.5 font-semibold tabular-nums">{stepRemaining}s</p>
@@ -528,7 +551,7 @@ function StepCopy({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="space-y-2"
+        className="glass space-y-2 rounded-2xl border border-border/40 p-4"
       >
         <p className="text-xs uppercase tracking-wider text-muted-foreground">
           Step {stepIndex + 1} · {step.label}
@@ -548,100 +571,59 @@ function StepCopy({
   );
 }
 
-function AdZoneStack({
-  currentStep,
+function FeaturedSponsor({
+  step,
   ads,
 }: {
-  currentStep: number;
+  step: number;
   ads: typeof ADS;
 }) {
   return (
-    <div className="mt-8 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-          <Megaphone className="h-3.5 w-3.5" />
-          Featured sponsor
-        </div>
-        <span className="text-[10px] text-muted-foreground">Refreshes with each step</span>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="space-y-3"
-        >
-          <div className="relative overflow-hidden rounded-2xl border border-dashed border-border/60 bg-card/40 p-5 backdrop-blur-sm">
-            <div
-              className={cn(
-                "absolute inset-0 -z-10 bg-gradient-to-br opacity-70",
-                ACCENT_CLASSES[ads[currentStep].accent],
-              )}
-            />
-            <div className="flex items-start gap-4">
-              <div
-                className={cn(
-                  "grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-card/70",
-                  ACCENT_CLASSES[ads[currentStep].accent].split(" ").pop(),
-                )}
-              >
-                {(() => {
-                  const Icon = ads[currentStep].Icon;
-                  return <Icon className="h-6 w-6" />;
-                })()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-border/60 bg-card/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {ads[currentStep].badge}
-                  </span>
-                  <span className="rounded-full border border-border/60 bg-card/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-                    {ads[currentStep].size}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-semibold leading-snug">{ads[currentStep].title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{ads[currentStep].body}</p>
-                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-                  {ads[currentStep].cta}
-                  <ArrowRight className="h-3 w-3" />
-                </div>
-              </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-2xl border border-dashed border-border/60 bg-card/40 p-4 backdrop-blur-sm"
+      >
+        <div
+          className={cn(
+            "absolute inset-0 -z-10 bg-gradient-to-br opacity-70",
+            ACCENT_CLASSES[ads[step].accent],
+          )}
+        />
+        <div className="flex items-start gap-3">
+          <div
+            className={cn(
+              "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-card/70",
+              ACCENT_CLASSES[ads[step].accent].split(" ").pop(),
+            )}
+          >
+            {(() => {
+              const Icon = ads[step].Icon;
+              return <Icon className="h-5 w-5" />;
+            })()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-border/60 bg-card/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {ads[step].badge}
+              </span>
+              <span className="rounded-full border border-border/60 bg-card/60 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                {ads[step].size}
+              </span>
+            </div>
+            <p className="mt-1.5 text-sm font-semibold leading-snug">{ads[step].title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{ads[step].body}</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
+              {ads[step].cta}
+              <ArrowRight className="h-3 w-3" />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {ads.map((ad, i) => {
-              const active = i === currentStep;
-              return (
-                <div
-                  key={ad.size}
-                  className={cn(
-                    "rounded-2xl border bg-card/30 p-4 backdrop-blur-sm transition-all",
-                    active
-                      ? "border-primary/50 shadow-[0_0_0_3px_color-mix(in_oklch,var(--primary)_15%,transparent)]"
-                      : "border-border/50 opacity-60",
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-muted-foreground">{ad.size}</span>
-                    <span
-                      className={cn(
-                        "h-1.5 w-1.5 rounded-full",
-                        active ? "bg-primary" : "bg-foreground/20",
-                      )}
-                    />
-                  </div>
-                  <p className="mt-2 text-xs font-semibold leading-snug">{ad.title}</p>
-                  <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{ad.body}</p>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
