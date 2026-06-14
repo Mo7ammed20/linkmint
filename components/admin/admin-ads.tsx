@@ -101,8 +101,8 @@ export function AdminAds() {
       }
       setPlacements(map);
       if (data.needsMigration) {
-        toast.warning("AdPlacement table missing", {
-          description: "Run `npx prisma migrate deploy`, then refresh this page.",
+        toast.warning("Database needs a one-time setup", {
+          description: "Click 'Run migration now' on the banner above.",
           duration: 8000,
         });
       }
@@ -330,28 +330,85 @@ export function AdminAds() {
 }
 
 function MigrationBanner() {
+  const [busy, setBusy] = React.useState(false);
+  const [log, setLog] = React.useState<string[] | null>(null);
+  const [result, setResult] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function runMigration() {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    setLog(null);
+    try {
+      const res = await fetch("/api/admin/migrate", { method: "POST" });
+      const data = (await res.json()) as {
+        applied?: boolean;
+        alreadyApplied?: boolean;
+        log?: string[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(data.error || `Migration failed (${res.status})`);
+        return;
+      }
+      setLog(data.log ?? []);
+      setResult(
+        data.applied
+          ? "Migration applied. Reloading…"
+          : data.alreadyApplied
+            ? "Table already exists. Reloading…"
+            : "Done. Reloading…",
+      );
+      window.setTimeout(() => window.location.reload(), 1200);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <Card className="border-destructive/40 bg-destructive/5 p-4">
+    <Card className="border-warning/40 bg-warning/5 p-4">
       <div className="flex items-start gap-3">
-        <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
+        <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/15 text-warning">
           <AlertTriangle className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">AdPlacement table is missing in your database</p>
+          <p className="text-sm font-semibold">One-time setup: create the AdPlacement table</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            The ad system can&apos;t read or write placements until the new migration runs. Run this
-            from your project root:
+            Your database doesn&apos;t have the table that stores ad codes yet. Click the button
+            below to create it now (takes about 2 seconds). After that, all 8 zones will be
+            available to edit.
           </p>
-          <pre className="mt-2 overflow-x-auto rounded-lg border border-border/40 bg-background/60 p-2 font-mono text-[11px]">
-{`# Local dev
-npx prisma migrate dev
-
-# Production (Vercel — run once, locally, against the prod DB)
-DATABASE_URL="<your prod url>" npx prisma migrate deploy`}
-          </pre>
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            After the migration, click <strong>Refresh</strong> above.
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              variant="gradient"
+              size="sm"
+              onClick={() => void runMigration()}
+              disabled={busy}
+            >
+              {busy ? "Creating table…" : "Run migration now"}
+            </Button>
+            <span className="text-[10px] text-muted-foreground">
+              Or wait for the next Vercel deploy — it runs this automatically.
+            </span>
+          </div>
+          {log ? (
+            <pre className="mt-3 max-h-44 overflow-auto rounded-lg border border-border/40 bg-background/60 p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
+{log.join("\n")}
+            </pre>
+          ) : null}
+          {result ? (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-success">
+              <CheckCircle2 className="h-3.5 w-3.5" /> {result}
+            </p>
+          ) : null}
+          {error ? (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5" /> {error}
+            </p>
+          ) : null}
         </div>
       </div>
     </Card>
