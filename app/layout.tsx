@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeInit } from "@/components/theme-init";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeInit />
         {children}
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
