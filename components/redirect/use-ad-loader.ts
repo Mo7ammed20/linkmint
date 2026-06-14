@@ -20,7 +20,10 @@ export function useAdLoader() {
         if (typeof document === "undefined") return true;
         const el = document.getElementById(`ad-step${step}-${zoneId}`);
         if (!el) return true;
-        return el.clientHeight > 0;
+        const loaded = el.getAttribute("data-ad-loaded");
+        if (loaded === "1") return true;
+        if (el.getAttribute("data-status") === "empty") return true;
+        return false;
       });
       if (ready) break;
       await new Promise((r) => setTimeout(r, CHECK_INTERVAL_MS));

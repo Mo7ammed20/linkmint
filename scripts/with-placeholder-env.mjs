@@ -16,9 +16,13 @@ if (args.length === 0) {
   process.exit(1);
 }
 
-const child = spawn(args[0], args.slice(1), {
+const isWindows = process.platform === "win32";
+const cmd = isWindows && !args[0].endsWith(".cmd") ? `${args[0]}.cmd` : args[0];
+
+const child = spawn(cmd, args.slice(1), {
   stdio: "inherit",
   env: process.env,
+  shell: isWindows,
 });
 
 child.on("exit", (code) => {

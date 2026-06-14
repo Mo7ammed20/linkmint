@@ -23,7 +23,7 @@ import { AuroraBackground } from "@/components/aurora-background";
 import { cn } from "@/lib/utils";
 import { AdBlockerGate } from "@/components/redirect/adblocker-gate";
 import { useAdLoader } from "@/components/redirect/use-ad-loader";
-import { AdZoneById } from "@/components/redirect/ad-zones";
+import { AdZoneById, GlobalAdSlots } from "@/components/redirect/ad-zones";
 
 const STEP_DURATION = 30;
 const TOTAL_STEPS = 3;
@@ -350,6 +350,7 @@ export function RedirectFlow({
 
                 <div className="space-y-4">
                   <AdZoneById id="zone2" step={step} />
+                  <AdZoneById id="zone6" step={step} />
                   <AdZoneById id="zone4" step={step} />
                 </div>
               </div>
@@ -370,6 +371,8 @@ export function RedirectFlow({
             </Link>
           </footer>
         </div>
+
+        <GlobalAdSlots step={step} />
       </div>
     </AdBlockerGate>
   );

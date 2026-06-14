@@ -1,0 +1,61 @@
+250 x 300
+<script>
+  atOptions = {
+    'key' : '871260f9d57d6148fa4b644f3c0ed195',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/871260f9d57d6148fa4b644f3c0ed195/invoke.js"></script>
+
+160 x 600
+<script>
+  atOptions = {
+    'key' : '337b2c2b00decef8a5bda8b216bf45b1',
+    'format' : 'iframe',
+    'height' : 600,
+    'width' : 160,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/337b2c2b00decef8a5bda8b216bf45b1/invoke.js"></script>
+
+320 x 50
+
+<script>
+  atOptions = {
+    'key' : '717bdef6c10a817e8a30797caf21799e',
+    'format' : 'iframe',
+    'height' : 50,
+    'width' : 320,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/717bdef6c10a817e8a30797caf21799e/invoke.js"></script>
+
+720 x 90
+
+<script>
+  atOptions = {
+    'key' : '9c1ceea045422f2a58ac14b9c6a50908',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/9c1ceea045422f2a58ac14b9c6a50908/invoke.js"></script>
+
+pop under you must put in all steps
+<script src="https://pl29747143.effectivecpmnetwork.com/5a/bc/b0/5abcb0499c1e4fed6f223152a970b15e.js"></script>
+
+social bar
+
+<script src="https://pl29747145.effectivecpmnetwork.com/62/28/54/6228542cbcfa6a941cecef24b68aa9f2.js"></script>
+
+
+
+
+
