@@ -43,30 +43,25 @@ async function postJSON<T>(url: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-let currentToken = "";
+function trackClick(shortCode: string): void {
+  void fetch("/api/track", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      shortCode,
+      country: "??",
+      device: detectDevice(),
+      browser: detectBrowser(),
+      referrer: document.referrer ? new URL(document.referrer).hostname || "Direct" : "Direct",
+    }),
+    keepalive: true,
+  }).catch(() => {
+  });
+}
 
-async function trackAndGo(shortCode: string): Promise<void> {
-  try {
-    await fetch("/api/track", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        shortCode,
-        country: "??",
-        device: detectDevice(),
-        browser: detectBrowser(),
-        referrer: document.referrer ? new URL(document.referrer).hostname || "Direct" : "Direct",
-      }),
-      keepalive: true,
-    });
-  } catch {
-  }
-  try {
-    const res = await postJSON<{ destination: string }>("/api/redirect/complete", { sessionToken: currentToken });
-    window.location.href = res.destination;
-  } catch {
-    window.location.href = "/";
-  }
+async function fetchDestination(sessionToken: string): Promise<string> {
+  const res = await postJSON<{ destination: string }>("/api/redirect/complete", { sessionToken });
+  return res.destination;
 }
 
 function detectDevice(): string {
@@ -195,10 +190,6 @@ export function RedirectFlow({
   const { adsReady, isLoading: adsLoading, waitForAds } = useAdLoader();
 
   React.useEffect(() => {
-    currentToken = token;
-  }, [token]);
-
-  React.useEffect(() => {
     stepStartRef.current = Date.now();
     advancedRef.current = -1;
     const id = window.setTimeout(() => {
@@ -228,16 +219,20 @@ export function RedirectFlow({
 
   async function goNext() {
     if (!canContinue) return;
-    if (step >= TOTAL_STEPS - 1) {
-      void trackAndGo(shortCode);
-      return;
-    }
+    setError(null);
+    const isLastStep = step >= TOTAL_STEPS - 1;
     try {
       const res = await postJSON<{ sessionToken: string; step: number }>("/api/redirect/step", {
         sessionToken: token,
         step: step + 1,
       });
       setToken(res.sessionToken);
+      if (isLastStep) {
+        trackClick(shortCode);
+        const destination = await fetchDestination(res.sessionToken);
+        window.location.href = destination;
+        return;
+      }
       setStep((s) => s + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not advance");
