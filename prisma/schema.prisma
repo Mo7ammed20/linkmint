@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  avatar        String?
+  role          String   @default("user")
+  plan          String   @default("free")
+  country       String   @default("US")
+  status        String   @default("active")
+  totalEarnings Float    @default(0)
+  totalClicks   Int      @default(0)
+  totalLinks    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  links         Link[]
+  payouts       Payout[]
+  blogPosts     BlogPost[]
+  sessions      Session[]
+  notifications Notification[]
+  auditEntries  AuditEntry[] @relation("ActorAudits")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Link {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shortCode     String    @unique
+  destination   String
+  title         String?
+  description   String?
+  passwordHash  String?
+  tags          String[]
+  status        String    @default("active")
+  expiresAt     DateTime?
+  customAlias   Boolean   @default(false)
+  clicks      Int       @default(0)
+  earnings    Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastClickedAt DateTime?
+
+  clickLog    Click[]
+
+  @@index([userId])
+}
+
+model Click {
+  id       String   @id @default(cuid())
+  linkId   String
+  link     Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  ts       DateTime @default(now())
+  country  String
+  device   String
+  browser  String
+  referrer String
+  ipHash   String
+  earnings Float    @default(0)
+
+  @@index([linkId])
+  @@index([ts])
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  status      String   @default("active")
+  cpm         Float
+  ctr         Float
+  impressions Int
+  clicks      Int
+  revenue     Float
+  width       Int?
+  height      Int?
+  body        String
+  imageUrl    String?
+  cta         String
+  url         String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Payout {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Float
+  method      String
+  status      String    @default("pending")
+  requestedAt DateTime  @default(now())
+  completedAt DateTime?
+  reference   String?
+
+  @@index([userId])
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  content     String
+  cover       String?
+  category    String
+  tags        String[]
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  status      String    @default("draft")
+  publishedAt DateTime?
+  scheduledAt DateTime?
+  readTime    Int       @default(1)
+  views       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model AuditEntry {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation("ActorAudits", fields: [actorId], references: [id], onDelete: SetNull)
+  actorName String
+  action    String
+  target    String
+  ip        String
+  createdAt DateTime @default(now())
+  metadata  Json?
+
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   @default("info")
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
