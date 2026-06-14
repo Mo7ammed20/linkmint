@@ -4,16 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -H 0.0.0.0 -p 3000",
-    "build": "prisma generate && next build",
+    "build": "node scripts/with-placeholder-env.mjs prisma generate && next build",
+    "build:no-db": "cross-env DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "node scripts/with-placeholder-env.mjs prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:reset": "prisma migrate reset",
     "prisma:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "postinstall": "prisma generate"
+    "postinstall": "node scripts/with-placeholder-env.mjs prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

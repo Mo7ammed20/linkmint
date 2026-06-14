@@ -2,6 +2,23 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
+function warnMissingEnv(): void {
+  if (typeof process === "undefined") return;
+  if (process.env.DATABASE_URL) return;
+  const isVercel = Boolean(process.env.VERCEL);
+  const hint = isVercel
+    ? "Set it in Vercel → Project Settings → Environment Variables for Production, Preview, and Development."
+    : "Add it to your .env file (see .env.example).";
+  console.warn(
+    `\n[db] ⚠ DATABASE_URL is not defined. ${hint}\n` +
+      "[db]   All database operations will fail until this is set.\n",
+  );
+}
+
+if (typeof process !== "undefined" && !process.env.DATABASE_URL) {
+  warnMissingEnv();
+}
+
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({

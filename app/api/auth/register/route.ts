@@ -11,6 +11,24 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return Response.json(
+        {
+          error:
+            "DATABASE_URL is not configured. On Vercel, set it in Project Settings → Environment Variables, then redeploy.",
+        },
+        { status: 503 },
+      );
+    }
+    if (!process.env.AUTH_SECRET) {
+      return Response.json(
+        {
+          error:
+            "AUTH_SECRET is not configured. On Vercel, set it in Project Settings → Environment Variables, then redeploy.",
+        },
+        { status: 503 },
+      );
+    }
     const parsed = await readJson(req, schema);
     if (!parsed.ok) return parsed.res;
     const { name, email, password } = parsed.data;
